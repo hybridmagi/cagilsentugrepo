@@ -8,7 +8,7 @@
  - https://webhook.site/#!/58281ffb-2f8d-402f-bc12-986cf7aa7cf9/40441724-0e00-4639-88d0-b2bbb40a35c8/1 
  - Yukarıdaki url üzerinden postlara ulaşabilirsiniz.
  - Json formatında bir script gönderiyorum.
- - Postman üzerinden post atabiliyorum.
+ - http://cagildocker.westeurope.cloudapp.azure.com/alert ile postman üzerinden post atabiliyorum.
 
 ## URL
  - http://cagildocker.westeurope.cloudapp.azure.com/ 

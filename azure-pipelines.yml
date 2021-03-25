@@ -1,0 +1,68 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+trigger:
+- master
+
+
+stages:
+- stage:
+  jobs:
+    - job: copycompose
+      steps:
+
+        - task: DockerCompose@0
+          inputs:
+            containerregistrytype: 'Container Registry'
+            dockerRegistryEndpoint: 'docker-connection'
+            dockerComposeFile: '**/docker-compose.yaml'
+            projectName: 'collwr/cagilsntg:latest'
+            action: 'Build services'
+        - task: DockerCompose@0
+          inputs:
+            containerregistrytype: 'Container Registry'
+            dockerRegistryEndpoint: 'docker-connection'
+            dockerComposeFile: '**/docker-compose.yaml'
+            projectName: 'collwr/cagilsntg:latest'
+            action: 'Push services'
+        - task: CopyFiles@2
+          inputs:
+            Contents: |
+              **/docker-compose.yaml
+              **/nginx/*
+            TargetFolder: '$(Build.ArtifactStagingDirectory)'
+        
+        - task: PublishBuildArtifacts@1
+          inputs:
+            PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+            ArtifactName: 'drop'
+            publishLocation: 'Container'
+    - job:
+      dependsOn: copycompose
+      steps:
+        - task: DownloadBuildArtifacts@0
+          inputs:
+            buildType: 'current'
+            downloadType: 'single'
+            artifactName: 'drop'
+            downloadPath: '$(System.ArtifactsDirectory)'
+        
+        - task: CopyFilesOverSSH@0
+          inputs:
+            sshEndpoint: 'ssh-ubuntu'
+            sourceFolder: '$(System.ArtifactsDirectory)/drop'
+            contents: '**'
+            readyTimeout: '20000'
+        - task: SSH@0
+          inputs:
+            sshEndpoint: 'ssh-ubuntu'
+            runOptions: 'inline'
+            inline: |
+              docker login -u $(DOCKER_USERNAME) -p $(DOCKER_PASSWORD)
+              ls
+              docker-compose pull
+              docker-compose up -d
+            interactiveSession: true
+            readyTimeout: '20000'
